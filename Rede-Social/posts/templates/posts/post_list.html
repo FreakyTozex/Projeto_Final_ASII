@@ -1,0 +1,366 @@
+{% extends 'base.html' %}
+
+{% block title %}Feed — Nexus{% endblock %}
+
+{% block extra_css %}
+<style>
+    .feed-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.5rem;
+    }
+
+    .feed-title {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.4rem;
+        font-weight: 700;
+    }
+
+    .post-count {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        background: var(--surface2);
+        padding: 4px 12px;
+        border-radius: 20px;
+    }
+
+    .post-card {
+        margin-bottom: 1.2rem;
+        animation: fadeUp 0.4s ease both;
+    }
+
+    @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(16px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .post-card:nth-child(1) { animation-delay: 0.05s; }
+    .post-card:nth-child(2) { animation-delay: 0.1s; }
+    .post-card:nth-child(3) { animation-delay: 0.15s; }
+    .post-card:nth-child(4) { animation-delay: 0.2s; }
+
+    .post-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 20px;
+    }
+
+    .post-author {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .author-info a {
+        font-weight: 600;
+        font-size: 0.95rem;
+        color: var(--text);
+        text-decoration: none;
+    }
+
+    .author-info a:hover { color: var(--accent); }
+
+    .post-time {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+
+    .post-body { padding: 0 20px 16px; }
+
+    .post-text {
+        font-size: 0.98rem;
+        line-height: 1.7;
+        color: var(--text);
+        white-space: pre-wrap;
+        word-break: break-word;
+    }
+
+    .post-image {
+        width: 100%;
+        max-height: 500px;
+        object-fit: cover;
+        margin-top: 12px;
+        border-radius: 10px;
+    }
+
+    .post-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 20px;
+        border-top: 1px solid var(--border);
+    }
+
+    .action-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 14px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        cursor: pointer;
+        border: 1px solid var(--border);
+        background: transparent;
+        color: var(--text-muted);
+        font-family: 'DM Sans', sans-serif;
+        transition: all 0.2s;
+    }
+
+    .action-btn:hover { background: var(--surface2); color: var(--text); }
+
+    .like-btn { transition: all 0.15s; }
+    .like-btn.liked {
+        color: var(--accent2);
+        border-color: rgba(255,101,132,0.4);
+        background: rgba(255,101,132,0.08);
+    }
+    .like-btn.liked:hover { background: rgba(255,101,132,0.15); }
+
+    .like-btn .heart { transition: transform 0.15s; }
+    .like-btn.liked .heart { transform: scale(1.2); }
+
+    .comment-toggle-btn { margin-left: auto; }
+
+    .delete-btn {
+        margin-left: 4px;
+        padding: 6px 12px;
+        background: transparent;
+        border: 1px solid transparent;
+        border-radius: 8px;
+        color: var(--text-muted);
+        cursor: pointer;
+        font-size: 0.85rem;
+        font-family: 'DM Sans', sans-serif;
+        transition: all 0.2s;
+    }
+    .delete-btn:hover { color: #f87171; border-color: rgba(239,68,68,0.3); }
+
+    /* COMMENTS */
+    .comments-section {
+        border-top: 1px solid var(--border);
+        padding: 16px 20px;
+        display: none;
+    }
+
+    .comments-section.open { display: block; }
+
+    .comments-list { margin-bottom: 14px; }
+
+    .comment-item {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 12px;
+        animation: fadeUp 0.2s ease both;
+    }
+
+    .comment-bubble {
+        background: var(--surface2);
+        border-radius: 12px;
+        padding: 8px 14px;
+        flex: 1;
+    }
+
+    .comment-author {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--accent);
+        margin-bottom: 2px;
+        text-decoration: none;
+    }
+
+    .comment-text {
+        font-size: 0.88rem;
+        color: var(--text);
+        line-height: 1.5;
+    }
+
+    .comment-form {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .comment-input {
+        border-radius: 24px !important;
+        padding: 8px 16px !important;
+        font-size: 0.88rem !important;
+    }
+
+    .comment-send-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: var(--accent);
+        border: none;
+        color: white;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        transition: all 0.2s;
+    }
+    .comment-send-btn:hover { background: #5a52e0; transform: scale(1.05); }
+
+    .no-posts {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: var(--text-muted);
+    }
+
+    .no-posts h2 {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.3rem;
+        margin-bottom: 8px;
+        color: var(--text);
+    }
+
+    .login-prompt {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 1.5rem;
+        text-align: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .login-prompt p { color: var(--text-muted); margin-bottom: 12px; font-size: 0.95rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="feed-header">
+    <span class="feed-title">Feed</span>
+    <span class="post-count">{{ posts.count }} publicação{% if posts.count != 1 %}ões{% endif %}</span>
+</div>
+
+{% if not user.is_authenticated %}
+<div class="login-prompt">
+    <p>Entra para publicar e interagir com a comunidade.</p>
+    <a href="{% url 'login' %}" class="btn btn-primary">Entrar</a>
+    &nbsp;
+    <a href="{% url 'register' %}" class="btn btn-ghost">Registar</a>
+</div>
+{% endif %}
+
+{% if posts %}
+    {% for post in posts %}
+    <article class="card post-card" data-post-id="{{ post.id }}">
+        <div class="post-header">
+            <div class="post-author">
+                <a href="{% url 'user_posts' post.author.username %}" class="avatar">
+                    {{ post.author.username|slice:":1"|upper }}
+                </a>
+                <div class="author-info">
+                    <a href="{% url 'user_posts' post.author.username %}">{{ post.author.username }}</a>
+                    <div class="post-time">{{ post.created_at|timesince }} atrás</div>
+                </div>
+            </div>
+            {% if user == post.author %}
+            <form method="post" action="{% url 'post_delete' post.pk %}" onsubmit="return confirm('Eliminar publicação?')">
+                {% csrf_token %}
+                <button type="submit" class="delete-btn" title="Eliminar">✕</button>
+            </form>
+            {% endif %}
+        </div>
+
+        <div class="post-body">
+            <p class="post-text">{{ post.content }}</p>
+            {% if post.image %}
+            <img src="{{ post.image.url }}" alt="Imagem da publicação" class="post-image">
+            {% endif %}
+        </div>
+
+        <div class="post-actions">
+            {% if user.is_authenticated %}
+            <button
+                class="action-btn like-btn {% if post.id in liked_posts %}liked{% endif %}"
+                data-post-id="{{ post.id }}"
+                onclick="toggleLike(this, {{ post.id }})">
+                <span class="heart">{% if post.id in liked_posts %}♥{% else %}♡{% endif %}</span>
+                <span class="like-count">{{ post.total_likes }}</span>
+            </button>
+            {% else %}
+            <span class="action-btn">♡ {{ post.total_likes }}</span>
+            {% endif %}
+
+            <button class="action-btn comment-toggle-btn" onclick="toggleComments({{ post.id }})">
+                💬 {{ post.total_comments }}
+            </button>
+        </div>
+
+        <div class="comments-section" id="comments-{{ post.id }}">
+            {% if post.comments.all %}
+            <div class="comments-list">
+                {% for comment in post.comments.all %}
+                <div class="comment-item">
+                    <a href="{% url 'user_posts' comment.author.username %}" class="avatar avatar-sm">
+                        {{ comment.author.username|slice:":1"|upper }}
+                    </a>
+                    <div class="comment-bubble">
+                        <a href="{% url 'user_posts' comment.author.username %}" class="comment-author">{{ comment.author.username }}</a>
+                        <p class="comment-text">{{ comment.content }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% if user.is_authenticated %}
+            <form class="comment-form" method="post" action="{% url 'post_comment' post.pk %}">
+                {% csrf_token %}
+                {{ comment_form.content }}
+                <button type="submit" class="comment-send-btn" title="Enviar">➤</button>
+            </form>
+            {% else %}
+            <p style="font-size:0.85rem; color:var(--text-muted); text-align:center;">
+                <a href="{% url 'login' %}" style="color:var(--accent);">Entra</a> para comentar.
+            </p>
+            {% endif %}
+        </div>
+    </article>
+    {% endfor %}
+{% else %}
+    <div class="no-posts">
+        <h2>Sem publicações ainda</h2>
+        <p>Sê o primeiro a publicar algo!</p>
+        {% if user.is_authenticated %}
+        <br>
+        <a href="{% url 'post_create' %}" class="btn btn-primary">+ Nova publicação</a>
+        {% endif %}
+    </div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const csrfToken = '{{ csrf_token }}';
+
+function toggleLike(btn, postId) {
+    fetch(`/publicacao/${postId}/like/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': csrfToken, 'Content-Type': 'application/json' },
+    })
+    .then(r => r.json())
+    .then(data => {
+        const heart = btn.querySelector('.heart');
+        const count = btn.querySelector('.like-count');
+        btn.classList.toggle('liked', data.liked);
+        heart.textContent = data.liked ? '♥' : '♡';
+        count.textContent = data.total_likes;
+    });
+}
+
+function toggleComments(postId) {
+    const section = document.getElementById(`comments-${postId}`);
+    section.classList.toggle('open');
+    if (section.classList.contains('open')) {
+        const input = section.querySelector('input, textarea');
+        if (input) input.focus();
+    }
+}
+</script>
+{% endblock %}

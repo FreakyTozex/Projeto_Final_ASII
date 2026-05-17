@@ -1,3 +1,23 @@
 from django.contrib import admin
 
 # Register your models here.
+from django.contrib import admin
+from .models import Post, Like, Comment
+
+
+@admin.register(Post)
+class PostAdmin(admin.ModelAdmin):
+    list_display = ['author', 'content', 'created_at', 'total_likes', 'total_comments']
+    list_filter = ['created_at', 'author']
+    search_fields = ['content', 'author__username']
+
+
+@admin.register(Like)
+class LikeAdmin(admin.ModelAdmin):
+    list_display = ['user', 'post', 'created_at']
+
+
+@admin.register(Comment)
+class CommentAdmin(admin.ModelAdmin):
+    list_display = ['author', 'post', 'content', 'created_at']
+    search_fields = ['content', 'author__username']

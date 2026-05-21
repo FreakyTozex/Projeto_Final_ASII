@@ -14,6 +14,7 @@ from pathlib import Path
 import environ
 import os
 
+
   # Carrega as variáveis de ambiente do arquivo .env
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -36,7 +37,7 @@ SECRET_KEY = env('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env('DEBUG')
 
-ALLOWED_HOSTS = ['0.0.0.0', 'localhost',]
+ALLOWED_HOSTS = ['0.0.0.0:8000', 'localhost', '127.0.0.1']
 
 
 # Application definition
@@ -83,9 +84,15 @@ TEMPLATES = [
 WSGI_APPLICATION = 'socialapp.wsgi.application'
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+    "default": {
+        "ENGINE": "django.db.backends.mysql",
+        "OPTIONS": {
+            "database": "socialapp",
+            "host": "database",
+            "user": "root",
+            "password": "",
+            "port": 3306,
+        },
     }
 }
 

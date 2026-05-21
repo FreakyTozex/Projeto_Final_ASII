@@ -1,0 +1,43 @@
+name: Rede-Social
+
+volumes:
+  mysql-Rede-Social-mysql:
+  media_data:
+
+services:
+
+  database:
+    image: mysql:latest
+    env_file: Rede-Social\.env
+    environment:
+      - MYSQL_ALLOW_EMPTY_PASSWORD=yes
+    ports:
+      - 9306:3306
+    volumes:
+      - mysql-Rede-Social-mysql:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  app:
+    build: .
+    ports:
+      - 9000:8000
+    env_file: Rede-Social\.env
+    volumes:
+      - media_data:/usr/src/app/media
+    depends_on:
+      database:
+        condition: service_healthy
+    develop:
+      watch:
+        - action: sync
+          path: ./Rede-Social
+          target: /usr/src/app
+          ignore:
+            - virtualenv
+        - action: rebuild
+          path: requirements.txt
